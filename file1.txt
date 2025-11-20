@@ -1,3 +1,104 @@
-student name
-student rollno
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/user/repo.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+    }
+}
+...............
+node {
+    
+    stage('Checkout') {
+        git url: 'https://github.com/user/repo.git', branch: 'main'
+    }
 
+    stage('Build') {
+        sh 'mvn clean install'
+    }
+
+    stage('Test') {
+        sh 'mvn test'
+    }
+
+    stage('Deploy') {
+        sh 'echo Deploying application...'
+    }
+}
+.............
+node {
+
+    // Clean workspace before build
+    stage('Cleanup') {
+        deleteDir()
+        echo "Workspace cleaned."
+    }
+
+    // Clone project from Git
+    stage('Checkout') {
+        git branch: 'main', url: 'https://github.com/user/repo.git'
+        echo "Code checkout completed."
+    }
+
+    // Install dependencies & build project
+    stage('Build') {
+        echo "Building Maven project..."
+        sh "mvn clean install -DskipTests=false"
+    }
+
+    // Run test cases
+    stage('Test') {
+        echo "Running tests..."
+        sh "mvn test"
+    }
+
+    // Package the WAR file
+    stage('Package') {
+        echo "Packaging WAR..."
+        sh "mvn package"
+    }
+
+    // Deploy to Tomcat server using curl
+    stage('Deploy to Tomcat') {
+        echo "Deploying to Tomcat..."
+
+        // Replace with your Tomcat Manager credentials
+        def tomcatUser = "deployUser"
+        def tomcatPass = "StrongPass123"
+        def tomcatHost = "http://localhost:8080"
+
+        // Path to your WAR file (target/*.war)
+        def warPath = "target/MavenWeb.war"
+
+        // Tomcat deployment command
+        sh """
+            curl -u ${tomcatUser}:${tomcatPass} \\
+            -T ${warPath} \\
+            "${tomcatHost}/manager/text/deploy?path=/myapp&update=true"
+        """
+    }
+
+    // Final message
+    stage("Done") {
+        echo "Pipeline Completed Successfully!"
+    }
+}
+
+post {
+    always {
+        echo "Pipeline finished. Cleaning up..."
+    }
+    success {
+        echo "Build SUCCESSFUL 🎉"
+    }
+    failure {
+        echo "Build FAILED ❌"
+    }
+}
