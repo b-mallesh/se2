@@ -95,3 +95,12 @@ services:
       - db-data:/var/lib/postgresql/data
     networks:
       - app-net
+
+  redis:
+    image: redis:alpine
+web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - redis
