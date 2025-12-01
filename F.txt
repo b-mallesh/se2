@@ -27,3 +27,17 @@ sudo docker build –t mywebapp .
 
 sudo docker run –d –p 80:80 mywebapp
 
+docker pull redis
+docker run --name my-redis -d redis
+docker exec -it my-redis redis-cli
+SET name "Alice"
+> GET name
+docker stop my-redis
+
+FROM redis:latest
+CMD ["redis-server"]
+
+docker build -t redisnew  .
+docker run --name myredisnew -d redisnew
+docker push budarajumadhurika/redis1
+docker build -t redisnew  .
